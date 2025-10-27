@@ -1,0 +1,170 @@
+<!-- ============================================================================
+FILE: templates/detector/index.html
+============================================================================ -->
+{% extends 'detector/base.html' %}
+
+{% block title %}Dashboard - Ransomware Detection{% endblock %}
+
+{% block content %}
+<div class="card fade-in">
+    <h1 class="card-title">🛡️ Ransomware Detection Dashboard</h1>
+    <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+        AI-powered malware detection system with real-time analysis
+    </p>
+    
+    {% if not model_loaded %}
+        <div class="alert alert-danger">
+            ⚠️ Warning: ML model not loaded. Please ensure all .pkl files are in detector/ml_models/
+        </div>
+    {% endif %}
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_scans }}</div>
+            <div class="stat-label">Total Scans</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ malware_detected }}</div>
+            <div class="stat-label">Malware Detected</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ high_risk }}</div>
+            <div class="stat-label">High Risk Files</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{% if total_scans > 0 %}{{ malware_detected|floatformat:0|add:"0"|floatformat:0 }}%{% else %}0%{% endif %}</div>
+            <div class="stat-label">Detection Rate</div>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
+        <a href="{% url 'analyze' %}" class="btn btn-primary">🔍 New Scan</a>
+        <button onclick="quickScan('benign')" class="btn btn-success">✅ Test Benign</button>
+        <button onclick="quickScan('suspicious')" class="btn" style="background: linear-gradient(135deg, var(--warning), #d97706);">⚠️ Test Suspicious</button>
+        <button onclick="quickScan('malware')" class="btn btn-danger">🦠 Test Malware</button>
+    </div>
+</div>
+
+<div class="card fade-in">
+    <h2 class="card-title">📊 Recent Scans</h2>
+    {% if recent_scans %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 1rem; text-align: left;">Time</th>
+                        <th style="padding: 1rem; text-align: left;">File</th>
+                        <th style="padding: 1rem; text-align: left;">Prediction</th>
+                        <th style="padding: 1rem; text-align: left;">Risk</th>
+                        <th style="padding: 1rem; text-align: left;">Confidence</th>
+                        <th style="padding: 1rem; text-align: left;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scan in recent_scans %}
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 1rem;">{{ scan.timestamp|date:"M d, H:i" }}</td>
+                        <td style="padding: 1rem;">{{ scan.file_name|default:"N/A" }}</td>
+                        <td style="padding: 1rem;">
+                            {% if scan.prediction == 'Malware' %}
+                                <span style="color: var(--danger);">🦠 {{ scan.prediction }}</span>
+                            {% else %}
+                                <span style="color: var(--success);">✅ {{ scan.prediction }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem;">
+                            <span class="risk-badge risk-{{ scan.risk_level|lower }}">{{ scan.risk_level }}</span>
+                        </td>
+                        <td style="padding: 1rem;">{{ scan.confidence|floatformat:1 }}%</td>
+                        <td style="padding: 1rem;">
+                            <a href="{% url 'results' scan.id %}" style="color: var(--primary);">View Details</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a href="{% url 'history' %}" class="btn btn-primary">View All Scans</a>
+        </div>
+    {% else %}
+        <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
+            No scans yet. Click "New Scan" to analyze your first file.
+        </p>
+    {% endif %}
+</div>
+
+<div id="quickScanModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="card" style="max-width: 600px; margin: 2rem; max-height: 80vh; overflow-y: auto;">
+        <h2 class="card-title">Quick Scan Results</h2>
+        <div id="quickScanResults"></div>
+        <button onclick="closeQuickScan()" class="btn btn-primary" style="margin-top: 1rem;">Close</button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function quickScan(type) {
+    const modal = document.getElementById('quickScanModal');
+    const results = document.getElementById('quickScanResults');
+    
+    results.innerHTML = '<div class="loading" style="display: block;"><div class="spinner"></div><p style="margin-top: 1rem;">Analyzing...</p></div>';
+    modal.style.display = 'flex';
+    
+    fetch(`/quick-scan/?type=${type}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const result = data.result;
+                const riskClass = result.risk_level.toLowerCase();
+                results.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <h3 style="color: var(--text-secondary); margin-bottom: 1rem;">Test Case: ${data.test_name}</h3>
+                        <div style="font-size: 4rem; margin: 1rem 0;">
+                            ${result.prediction === 'Malware' ? '🦠' : '✅'}
+                        </div>
+                        <h2 style="margin-bottom: 1rem;">${result.prediction}</h2>
+                        <span class="risk-badge risk-${riskClass}" style="font-size: 1.2rem;">${result.risk_level} RISK</span>
+                    </div>
+                    
+                    <div style="background: rgba(15, 23, 42, 0.5); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Confidence:</span>
+                            <span style="font-weight: bold;">${(result.confidence * 100).toFixed(1)}%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Malware Probability:</span>
+                            <span style="font-weight: bold; color: var(--danger);">${(result.malware_probability * 100).toFixed(1)}%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Recommendation:</span>
+                            <span style="font-weight: bold;">${result.recommendation}</span>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin: 1rem 0;">Threat Indicators:</h3>
+                    <div style="display: grid; gap: 0.5rem;">
+                        ${Object.entries(result.details).map(([key, value]) => `
+                            <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: rgba(15, 23, 42, 0.3); border-radius: 4px;">
+                                <span>${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                                <span style="color: ${value ? 'var(--danger)' : 'var(--success)'};">${value ? '✓ YES' : '✗ NO'}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                results.innerHTML = `<div class="alert alert-danger">Error: ${data.error}</div>`;
+            }
+        })
+        .catch(error => {
+            results.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+        });
+}
+
+function closeQuickScan() {
+    document.getElementById('quickScanModal').style.display = 'none';
+}
+</script>
+{% endblock %}

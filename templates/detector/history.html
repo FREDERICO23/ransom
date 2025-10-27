@@ -1,0 +1,66 @@
+<!-- ============================================================================
+FILE: templates/detector/history.html
+============================================================================ -->
+{% extends 'detector/base.html' %}
+
+{% block title %}Scan History - Ransomware Detection{% endblock %}
+
+{% block content %}
+<div class="card fade-in">
+    <h1 class="card-title">📜 Scan History</h1>
+    <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+        Complete history of all ransomware detection scans
+    </p>
+
+    {% if scans %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 1rem; text-align: left;">ID</th>
+                        <th style="padding: 1rem; text-align: left;">Timestamp</th>
+                        <th style="padding: 1rem; text-align: left;">File</th>
+                        <th style="padding: 1rem; text-align: left;">Prediction</th>
+                        <th style="padding: 1rem; text-align: left;">Risk Level</th>
+                        <th style="padding: 1rem; text-align: left;">Confidence</th>
+                        <th style="padding: 1rem; text-align: left;">Malware %</th>
+                        <th style="padding: 1rem; text-align: left;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scan in scans %}
+                    <tr style="border-bottom: 1px solid var(--border); {% if scan.prediction == 'Malware' %}background: rgba(239, 68, 68, 0.05);{% endif %}">
+                        <td style="padding: 1rem;">#{{ scan.id }}</td>
+                        <td style="padding: 1rem;">{{ scan.timestamp|date:"M d, Y H:i" }}</td>
+                        <td style="padding: 1rem;">{{ scan.file_name|default:"N/A"|truncatechars:30 }}</td>
+                        <td style="padding: 1rem;">
+                            {% if scan.prediction == 'Malware' %}
+                                <span style="color: var(--danger); font-weight: bold;">🦠 {{ scan.prediction }}</span>
+                            {% else %}
+                                <span style="color: var(--success); font-weight: bold;">✅ {{ scan.prediction }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem;">
+                            <span class="risk-badge risk-{{ scan.risk_level|lower }}">{{ scan.risk_level }}</span>
+                        </td>
+                        <td style="padding: 1rem;">{{ scan.confidence|floatformat:1 }}%</td>
+                        <td style="padding: 1rem;">
+                            <span style="color: var(--danger); font-weight: bold;">{{ scan.malware_probability|floatformat:1 }}%</span>
+                        </td>
+                        <td style="padding: 1rem;">
+                            <a href="{% url 'results' scan.id %}" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 4rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">📭</div>
+            <p style="color: var(--text-secondary); font-size: 1.2rem;">No scans found</p>
+            <a href="{% url 'analyze' %}" class="btn btn-primary" style="margin-top: 1rem;">Start Your First Scan</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+<!-- ============================================================================
+FILE: templates/detector/results.html
+============================================================================ -->
+{% extends 'detector/base.html' %}
+
+{% block title %}Scan Results - Ransomware Detection{% endblock %}
+
+{% block content %}
+<div class="card fade-in" style="text-align: center;">
+    <div style="font-size: 6rem; margin: 2rem 0;">
+        {% if scan.prediction == 'Malware' %}🦠{% else %}✅{% endif %}
+    </div>
+    
+    <h1 style="font-size: 3rem; margin-bottom: 1rem;">{{ scan.prediction }}</h1>
+    <span class="risk-badge risk-{{ scan.risk_level|lower }}" style="font-size: 1.5rem; padding: 1rem 2rem;">
+        {{ scan.risk_level }} RISK
+    </span>
+    
+    <div style="margin: 2rem 0; padding: 2rem; background: rgba(15, 23, 42, 0.5); border-radius: 12px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
+            <div>
+                <div style="font-size: 2.5rem; color: var(--primary); font-weight: bold;">
+                    {{ scan.confidence|floatformat:1 }}%
+                </div>
+                <div style="color: var(--text-secondary);">Confidence</div>
+            </div>
+            <div>
+                <div style="font-size: 2.5rem; color: var(--danger); font-weight: bold;">
+                    {{ scan.malware_probability|floatformat:1 }}%
+                </div>
+                <div style="color: var(--text-secondary);">Malware Probability</div>
+            </div>
+            <div>
+                <div style="font-size: 2.5rem; font-weight: bold; color: {% if scan.recommendation == 'ALLOW' %}var(--success){% else %}var(--danger){% endif %};">
+                    {{ scan.recommendation }}
+                </div>
+                <div style="color: var(--text-secondary);">Recommendation</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card fade-in">
+    <h2 class="card-title">📊 Analysis Details</h2>
+    
+    <div style="margin-bottom: 2rem;">
+        <p><strong>Scan Time:</strong> {{ scan.timestamp|date:"F d, Y H:i:s" }}</p>
+        {% if scan.file_name %}
+        <p><strong>File Name:</strong> {{ scan.file_name }}</p>
+        {% endif %}
+    </div>
+
+    <h3 style="margin: 2rem 0 1rem; color: var(--primary);">🔍 Behavioral Features</h3>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+        <div style="padding: 1rem; background: rgba(15, 23, 42, 0.3); border-radius: 8px;">
+            <h4 style="color: var(--text-secondary); margin-bottom: 0.5rem;">📝 Registry Activity</h4>
+            <p>Read: <strong>{{ scan.registry_read }}</strong></p>
+            <p>Write: <strong>{{ scan.registry_write }}</strong></p>
+            <p>Delete: <strong style="color: {% if scan.registry_delete > 0 %}var(--danger){% else %}var(--success){% endif %};">{{ scan.registry_delete }}</strong></p>
+        </div>
+        
+        <div style="padding: 1rem; background: rgba(15, 23, 42, 0.3); border-radius: 8px;">
+            <h4 style="color: var(--text-secondary); margin-bottom: 0.5rem;">🌐 Network Activity</h4>
+            <p>Threats: <strong style="color: {% if scan.network_threats > 0 %}var(--danger){% else %}var(--success){% endif %};">{{ scan.network_threats }}</strong></p>
+        </div>
+        
+        <div style="padding: 1rem; background: rgba(15, 23, 42, 0.3); border-radius: 8px;">
+            <h4 style="color: var(--text-secondary); margin-bottom: 0.5rem;">⚙️ Process Activity</h4>
+            <p>Malicious: <strong style="color: {% if scan.processes_malicious > 0 %}var(--danger){% else %}var(--success){% endif %};">{{ scan.processes_malicious }}</strong></p>
+        </div>
+        
+        <div style="padding: 1rem; background: rgba(15, 23, 42, 0.3); border-radius: 8px;">
+            <h4 style="color: var(--text-secondary); margin-bottom: 0.5rem;">📁 File Activity</h4>
+            <p>Malicious: <strong style="color: {% if scan.files_malicious > 0 %}var(--danger){% else %}var(--success){% endif %};">{{ scan.files_malicious }}</strong></p>
+        </div>
+    </div>
+
+    <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+        <a href="{% url 'analyze' %}" class="btn btn-primary">🔍 New Scan</a>
+        <a href="{% url 'history' %}" class="btn" style="background: var(--bg-dark);">📜 View History</a>
+        <a href="{% url 'index' %}" class="btn" style="background: var(--bg-dark);">🏠 Dashboard</a>
+    </div>
+</div>
+{% endblock %}
+

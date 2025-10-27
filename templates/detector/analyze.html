@@ -1,0 +1,172 @@
+<!-- ============================================================================
+FILE: templates/detector/analyze.html
+============================================================================ -->
+{% extends 'detector/base.html' %}
+
+{% block title %}Analyze File - Ransomware Detection{% endblock %}
+
+{% block content %}
+<div class="card fade-in">
+    <h1 class="card-title">🔍 Analyze File for Ransomware</h1>
+    <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+        Enter behavioral features extracted from the file to detect potential ransomware.
+    </p>
+
+    {% if not model_loaded %}
+        <div class="alert alert-danger">
+            ⚠️ Warning: ML model not loaded. Analysis will fail. Please check your model files.
+        </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'analyze' %}" id="analyzeForm">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label>📄 File Name (Optional)</label>
+            <input type="text" name="file_name" class="form-control" placeholder="e.g., suspicious_file.exe">
+        </div>
+
+        <h3 style="margin: 2rem 0 1rem; color: var(--primary);">📝 Registry Activity</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div class="form-group">
+                <label>Registry Read</label>
+                <input type="number" name="registry_read" class="form-control" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Registry Write</label>
+                <input type="number" name="registry_write" class="form-control" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Registry Delete</label>
+                <input type="number" name="registry_delete" class="form-control" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Registry Total</label>
+                <input type="number" name="registry_total" class="form-control" value="0" min="0">
+            </div>
+        </div>
+
+        <h3 style="margin: 2rem 0 1rem; color: var(--primary);">🌐 Network Activity</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div class="form-group">
+                <label>Network Threats</label>
+                <input type="number" name="network_threats" class="form-control" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>DNS Queries</label>
+                <input type="number" name="network_dns" class="form-control" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>HTTP Requests</label>
+                <input type="number" name="network_http" class="form-control" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Total Connections</label>
+                <input type="number" name="network_connections" class="form-control" value="0" min="0">
+            </div>
+        </div>
+
+        <h3 style="margin: 2rem 0 1rem; color: var(--primary);">⚙️ Process Activity</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div class="form-group">
+                <label>Malicious Processes</label>
+                <input type="number" name="processes_malicious" class="form-control" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Suspicious Processes</label>
+                <input type="number" name="processes_suspicious" class="form-control" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Monitored Processes</label>
+                <input type="number" name="processes_monitored" class="form-control" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Total Processes</label>
+                <input type="number" name="total_procsses" class="form-control" value="0" min="0">
+            </div>
+        </div>
+
+        <h3 style="margin: 2rem 0 1rem; color: var(--primary);">📁 File Activity</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div class="form-group">
+                <label>Malicious Files</label>
+                <input type="number" name="files_malicious" class="form-control" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Suspicious Files</label>
+                <input type="number" name="files_suspicious" class="form-control" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Text Files</label>
+                <input type="number" name="files_text" class="form-control" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Unknown Files</label>
+                <input type="number" name="files_unknown" class="form-control" value="0" min="0">
+            </div>
+        </div>
+
+        <h3 style="margin: 2rem 0 1rem; color: var(--primary);">🔧 API Activity</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div class="form-group">
+                <label>DLL Calls</label>
+                <input type="number" name="dlls_calls" class="form-control" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>API Calls</label>
+                <input type="number" name="apis" class="form-control" value="0" min="0">
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">🚀 Analyze Now</button>
+            <button type="button" onclick="fillSampleData()" class="btn btn-success">📝 Load Sample</button>
+            <button type="reset" class="btn" style="background: var(--bg-dark);">🔄 Reset</button>
+        </div>
+    </form>
+
+    <div class="loading" id="loadingIndicator">
+        <div class="spinner"></div>
+        <p style="margin-top: 1rem;">Analyzing file... Please wait</p>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('analyzeForm').addEventListener('submit', function() {
+    document.getElementById('loadingIndicator').style.display = 'block';
+});
+
+function fillSampleData() {
+    const form = document.getElementById('analyzeForm');
+    const sampleData = {
+        'file_name': 'sample_suspicious.exe',
+        'registry_read': 10,
+        'registry_write': 5,
+        'registry_delete': 2,
+        'registry_total': 17,
+        'network_threats': 1,
+        'network_dns': 3,
+        'network_http': 2,
+        'network_connections': 4,
+        'processes_malicious': 1,
+        'processes_suspicious': 0,
+        'processes_monitored': 5,
+        'total_procsses': 8,
+        'files_malicious': 2,
+        'files_suspicious': 1,
+        'files_text': 10,
+        'files_unknown': 3,
+        'dlls_calls': 50,
+        'apis': 100
+    };
+    
+    Object.entries(sampleData).forEach(([key, value]) => {
+        const input = form.querySelector(`[name="${key}"]`);
+        if (input) input.value = value;
+    });
+}
+</script>
+{% endblock %}
