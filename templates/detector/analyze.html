@@ -118,9 +118,15 @@ FILE: templates/detector/analyze.html
             </div>
         </div>
 
-        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+        <div style="margin-top: 2rem; display: flex; gap: 1rem; align-items: center;">
             <button type="submit" class="btn btn-primary" style="flex: 1;">🚀 Analyze Now</button>
-            <button type="button" onclick="fillSampleData()" class="btn btn-success">📝 Load Sample</button>
+            <select id="sampleSelector" class="form-control" style="width: 200px;">
+                <option value="">Select Sample Type</option>
+                <option value="benign">Benign Sample</option>
+                <option value="suspicious">Suspicious Sample</option>
+                <option value="malware">Malware Sample</option>
+            </select>
+            <button type="button" onclick="fillSampleData()" class="btn btn-success">📝 Load Selected Sample</button>
             <button type="reset" class="btn" style="background: var(--bg-dark);">🔄 Reset</button>
         </div>
     </form>
@@ -139,29 +145,83 @@ document.getElementById('analyzeForm').addEventListener('submit', function() {
     document.getElementById('loadingIndicator').style.display = 'block';
 });
 
-function fillSampleData() {
-    const form = document.getElementById('analyzeForm');
-    const sampleData = {
-        'file_name': 'sample_suspicious.exe',
-        'registry_read': 10,
-        'registry_write': 5,
-        'registry_delete': 2,
-        'registry_total': 17,
+const sampleDataSets = {
+    'benign': {
+        'file_name': 'benign_sample.exe',
+        'registry_read': 2,
+        'registry_write': 1,
+        'registry_delete': 0,
+        'registry_total': 3,
+        'network_threats': 0,
+        'network_dns': 1,
+        'network_http': 1,
+        'network_connections': 2,
+        'processes_malicious': 0,
+        'processes_suspicious': 0,
+        'processes_monitored': 3,
+        'total_procsses': 3,
+        'files_malicious': 0,
+        'files_suspicious': 0,
+        'files_text': 15,
+        'files_unknown': 1,
+        'dlls_calls': 20,
+        'apis': 50
+    },
+    'suspicious': {
+        'file_name': 'suspicious_sample.exe',
+        'registry_read': 8,
+        'registry_write': 4,
+        'registry_delete': 1,
+        'registry_total': 13,
         'network_threats': 1,
         'network_dns': 3,
         'network_http': 2,
-        'network_connections': 4,
-        'processes_malicious': 1,
-        'processes_suspicious': 0,
-        'processes_monitored': 5,
+        'network_connections': 5,
+        'processes_malicious': 0,
+        'processes_suspicious': 2,
+        'processes_monitored': 6,
         'total_procsses': 8,
-        'files_malicious': 2,
-        'files_suspicious': 1,
-        'files_text': 10,
+        'files_malicious': 1,
+        'files_suspicious': 2,
+        'files_text': 8,
         'files_unknown': 3,
-        'dlls_calls': 50,
-        'apis': 100
-    };
+        'dlls_calls': 60,
+        'apis': 120
+    },
+    'malware': {
+        'file_name': 'malware_sample.exe',
+        'registry_read': 15,
+        'registry_write': 8,
+        'registry_delete': 3,
+        'registry_total': 26,
+        'network_threats': 3,
+        'network_dns': 5,
+        'network_http': 4,
+        'network_connections': 8,
+        'processes_malicious': 2,
+        'processes_suspicious': 3,
+        'processes_monitored': 10,
+        'total_procsses': 15,
+        'files_malicious': 4,
+        'files_suspicious': 3,
+        'files_text': 5,
+        'files_unknown': 6,
+        'dlls_calls': 150,
+        'apis': 300
+    }
+};
+
+function fillSampleData() {
+    const selector = document.getElementById('sampleSelector');
+    const selectedType = selector.value;
+    
+    if (!selectedType) {
+        alert('Please select a sample type first.');
+        return;
+    }
+    
+    const form = document.getElementById('analyzeForm');
+    const sampleData = sampleDataSets[selectedType];
     
     Object.entries(sampleData).forEach(([key, value]) => {
         const input = form.querySelector(`[name="${key}"]`);
