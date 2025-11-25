@@ -42,10 +42,10 @@ def predict_ransomware(sample_dict, model, scaler, feature_names, label_encoders
     prediction = model.predict(sample_scaled)[0]
     probability = model.predict_proba(sample_scaled)[0]
     
-    malware_prob = probability[0]
-    if malware_prob > 0.7:
+    malware_prob = probability[1] * 100
+    if malware_prob > 70:
         risk_level = "HIGH"
-    elif malware_prob > 0.4:
+    elif malware_prob > 40:
         risk_level = "MEDIUM"
     else:
         risk_level = "LOW"
@@ -57,9 +57,9 @@ def predict_ransomware(sample_dict, model, scaler, feature_names, label_encoders
     
     result = {
         'prediction': class_label,
-        'confidence': float(max(probability)),
+        'confidence': float(max(probability)) * 100,
         'malware_probability': float(malware_prob),
-        'benign_probability': float(probability[1]),
+        'benign_probability': float(probability[0]) * 100,
         'risk_level': risk_level,
         'recommendation': 'ALLOW' if prediction == 1 else 'BLOCK/QUARANTINE',
         'details': {

@@ -20,13 +20,13 @@ FILE: templates/detector/results.html
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
             <div>
                 <div style="font-size: 2.5rem; color: var(--primary); font-weight: bold;">
-                    {{ scan.confidence|floatformat:1 }}%
+                    {{ scan.confidence|floatformat:2 }}%
                 </div>
                 <div style="color: var(--text-secondary);">Confidence</div>
             </div>
             <div>
                 <div style="font-size: 2.5rem; color: var(--danger); font-weight: bold;">
-                    {{ scan.malware_probability|floatformat:1 }}%
+                    {{ scan.malware_probability|floatformat:2 }}%
                 </div>
                 <div style="color: var(--text-secondary);">Malware Probability</div>
             </div>
