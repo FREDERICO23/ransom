@@ -61,7 +61,7 @@ def predict_ransomware(sample_dict, model, scaler, feature_names, label_encoders
         'malware_probability': float(malware_prob),
         'benign_probability': float(probability[0]) * 100,
         'risk_level': risk_level,
-        'recommendation': 'ALLOW' if prediction == 1 else 'BLOCK/QUARANTINE',
+        'recommendation': 'ALLOW' if prediction == 0 else 'BLOCK/QUARANTINE',
         'details': {
             'high_registry_activity': sample_dict.get('registry_total', 0) > 5,
             'suspicious_network': sample_dict.get('network_threats', 0) > 0,
