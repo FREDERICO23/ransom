@@ -57,7 +57,7 @@ def predict_ransomware(sample_dict, model, scaler, feature_names, label_encoders
     
     result = {
         'prediction': class_label,
-        'confidence': float(max(probability)) * 100,
+        'confidence': float(probability[0]) * 100,
         'malware_probability': float(malware_prob) * 100,
         'benign_probability': float(probability[0]) * 100,
         'risk_level': risk_level,

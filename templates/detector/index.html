@@ -132,11 +132,11 @@ function quickScan(type) {
                     <div style="background: rgba(15, 23, 42, 0.5); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                             <span>Confidence:</span>
-                            <span style="font-weight: bold;">${(result.confidence * 100).toFixed(1)}%</span>
+                            <span style="font-weight: bold;">${(result.confidence).toFixed(1)}%</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                             <span>Malware Probability:</span>
-                            <span style="font-weight: bold; color: var(--danger);">${(result.malware_probability * 100).toFixed(1)}%</span>
+                            <span style="font-weight: bold; color: var(--danger);">${(result.malware_probability).toFixed(1)}%</span>
                         </div>
                         <div style="display: flex; justify-content: space-between;">
                             <span>Recommendation:</span>
